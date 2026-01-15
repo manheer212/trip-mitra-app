@@ -1,3 +1,5 @@
+import 'dart:convert'; // <--- New
+import 'package:http/http.dart' as http; // <--- New
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart'; // <--- Add this
 
@@ -11,19 +13,66 @@ class TripResultScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _saveTrip(BuildContext context) async {
+    // Show a "Saving..." message
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Saving your trip... 💾")));
+
+    try {
+      final response = await http.post(
+        Uri.parse(
+          'http://localhost:3000/save-trip',
+        ), // Use 10.0.2.2 if on Android Emulator
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'destination': tripData['destination'],
+          'budget': tripData['budget_tier'],
+          'fullData': tripData,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.green,
+            content: Text("Trip Saved Successfully! ✅"),
+          ),
+        );
+      } else {
+        throw Exception('Failed to save');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text("Error saving: $e"),
+        ),
+      );
+    }
+  }
+
   const TripResultScreen({super.key, required this.tripData});
 
   @override
   Widget build(BuildContext context) {
-    // Extracting data for easier use
-    final destination = tripData['destination'];
-    final budget = tripData['budget_tier'];
-    final List gems = tripData['gems'];
-    final List itinerary = tripData['itinerary'];
-    final transportTip =
-        tripData['local_transport'] ?? "Use local taxi or walking.";
-
+   // Extracting data safely (Safety Wheels applied! 🛞)
+    final destination = tripData['destination'] ?? "Unknown Destination";
+    final budget = tripData['budget_tier'] ?? "Standard";
+    final List gems = tripData['gems'] ?? [];
+    final List itinerary = tripData['itinerary'] ?? [];
+    final transportTip = tripData['local_transport'] ?? "No transport info available.";
     return Scaffold(
+      // --- NEW: SAVE BUTTON ---
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _saveTrip(context),
+        backgroundColor: Colors.teal,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.save),
+        label: const Text("Save Trip"),
+      ),
+      // ------------------------
       body: CustomScrollView(
         slivers: [
           SliverAppBar(

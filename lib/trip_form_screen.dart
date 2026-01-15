@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import './trip_result_screen.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'saved_trips_screen.dart';
 
 class TripFormScreen extends StatefulWidget {
   const TripFormScreen({super.key});
@@ -21,15 +22,24 @@ class _TripFormScreenState extends State<TripFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Trip Mitra",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+     appBar: AppBar(
+        title: const Text("Trip Mitra", style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
+        actions: [
+          // NEW: Button to view saved trips
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SavedTripsScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
