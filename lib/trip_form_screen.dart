@@ -152,8 +152,11 @@ class _TripFormScreenState extends State<TripFormScreen> {
                       return;
                     }
 
+                    final messenger = ScaffoldMessenger.of(context);
+                    final navigator = Navigator.of(context);
+
                     // 1. Show Loading Indicator
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       const SnackBar(
                         content: Text("Connecting to Trip Mitra Brain..."),
                       ),
@@ -168,21 +171,19 @@ class _TripFormScreenState extends State<TripFormScreen> {
 
                     try {
                       // 3. Send Request to Backend
-                      // NOTE: Using localhost because you are on Web.
-                      // If testing on Android Emulator later, change localhost to 10.0.2.2
                       final response = await http.post(
-                        Uri.parse('http://localhost:3000/generate-trip'),
+                        Uri.parse('https://trip-mitra-api.onrender.com/generate-trip'),
                         headers: {"Content-Type": "application/json"},
                         body: jsonEncode(requestBody),
                       );
 
+                      if (!mounted) return;
                       if (response.statusCode == 200) {
                         // 4. Success! Decode the data
                         final responseData = jsonDecode(response.body);
 
                         // 5. Navigate to Result Screen with REAL Data
-                        Navigator.push(
-                          context,
+                        navigator.push(
                           MaterialPageRoute(
                             builder: (context) =>
                                 TripResultScreen(tripData: responseData),
@@ -193,7 +194,8 @@ class _TripFormScreenState extends State<TripFormScreen> {
                       }
                     } catch (e) {
                       // 6. Handle Errors
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      if (!mounted) return;
+                      messenger.showSnackBar(
                         SnackBar(
                           content: Text("Error: $e"),
                           backgroundColor: Colors.red,
@@ -235,7 +237,7 @@ class _TripFormScreenState extends State<TripFormScreen> {
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : Colors.white,
+          color: isSelected ? color.withValues(alpha: 0.1) : Colors.white,
           border: Border.all(
             color: isSelected ? color : Colors.grey.shade300,
             width: 2,

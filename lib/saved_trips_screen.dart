@@ -24,7 +24,7 @@ class _SavedTripsScreenState extends State<SavedTripsScreen> {
   Future<void> fetchTrips() async {
     try {
       // Use 10.0.2.2 if on Android Emulator, localhost if on Web
-      final response = await http.get(Uri.parse('http://localhost:3000/my-trips'));
+      final response = await http.get(Uri.parse('https://trip-mitra-api.onrender.com/my-trips'));
 
       if (response.statusCode == 200) {
         setState(() {
@@ -34,7 +34,7 @@ class _SavedTripsScreenState extends State<SavedTripsScreen> {
       }
     } catch (e) {
       setState(() => isLoading = false);
-      print("Error fetching trips: $e");
+      debugPrint("Error fetching trips: $e");
     }
   }
 

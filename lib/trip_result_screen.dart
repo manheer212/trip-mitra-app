@@ -3,9 +3,16 @@ import 'package:http/http.dart' as http; // <--- New
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart'; // <--- Add this
 
-class TripResultScreen extends StatelessWidget {
-  final Map<String, dynamic> tripData; // <--- Now accepts the full JSON object
-  // Function to open web links
+class TripResultScreen extends StatefulWidget {
+  final Map<String, dynamic> tripData;
+
+  const TripResultScreen({super.key, required this.tripData});
+
+  @override
+  State<TripResultScreen> createState() => _TripResultScreenState();
+}
+
+class _TripResultScreenState extends State<TripResultScreen> {
   Future<void> _launchURL(String urlString) async {
     final Uri url = Uri.parse(urlString);
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
@@ -13,25 +20,24 @@ class TripResultScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _saveTrip(BuildContext context) async {
-    // Show a "Saving..." message
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Saving your trip... 💾")));
+  Future<void> _saveTrip() async {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Saving your trip... 💾")),
+    );
 
     try {
       final response = await http.post(
-        Uri.parse(
-          'http://localhost:3000/save-trip',
-        ), // Use 10.0.2.2 if on Android Emulator
+        Uri.parse('https://trip-mitra-api.onrender.com/save-trip'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'destination': tripData['destination'],
-          'budget': tripData['budget_tier'],
-          'fullData': tripData,
+          'destination': widget.tripData['destination'],
+          'budget': widget.tripData['budget_tier'],
+          'fullData': widget.tripData,
         }),
       );
 
+      if (!mounted) return;
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -44,6 +50,7 @@ class TripResultScreen extends StatelessWidget {
         throw Exception('Failed to save');
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.red,
@@ -53,20 +60,16 @@ class TripResultScreen extends StatelessWidget {
     }
   }
 
-  const TripResultScreen({super.key, required this.tripData});
-
   @override
   Widget build(BuildContext context) {
-   // Extracting data safely (Safety Wheels applied! 🛞)
-    final destination = tripData['destination'] ?? "Unknown Destination";
-    final budget = tripData['budget_tier'] ?? "Standard";
-    final List gems = tripData['gems'] ?? [];
-    final List itinerary = tripData['itinerary'] ?? [];
-    final transportTip = tripData['local_transport'] ?? "No transport info available.";
+    final destination = widget.tripData['destination'] ?? "Unknown Destination";
+    final budget = widget.tripData['budget_tier'] ?? "Standard";
+    final List gems = widget.tripData['gems'] ?? [];
+    final List itinerary = widget.tripData['itinerary'] ?? [];
+    final transportTip = widget.tripData['local_transport'] ?? "No transport info available.";
     return Scaffold(
-      // --- NEW: SAVE BUTTON ---
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _saveTrip(context),
+        onPressed: _saveTrip,
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.save),
@@ -93,7 +96,7 @@ class TripResultScreen extends StatelessWidget {
                 children: [
                   // 1. The Real Image
                   Image.network(
-                    tripData['imageUrl'] ?? "https://via.placeholder.com/400",
+                    widget.tripData['imageUrl'] ?? "https://via.placeholder.com/400",
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
@@ -109,7 +112,7 @@ class TripResultScreen extends StatelessWidget {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.7),
+                          Colors.black.withValues(alpha: 0.7),
                         ],
                       ),
                     ),
@@ -280,7 +283,7 @@ class TripResultScreen extends StatelessWidget {
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Column(
