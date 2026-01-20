@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:google_fonts/google_fonts.dart'; // Ensure you added this dependency
+import 'package:google_fonts/google_fonts.dart';
 import 'trip_result_screen.dart';
 import 'saved_trips_screen.dart';
 
@@ -12,36 +12,35 @@ class TripFormScreen extends StatefulWidget {
   State<TripFormScreen> createState() => _TripFormScreenState();
 }
 
-final TextEditingController _originController =
-    TextEditingController(); // <--- NEW
-
 class _TripFormScreenState extends State<TripFormScreen> {
   // --- STATE VARIABLES ---
   final TextEditingController _destinationController = TextEditingController();
+  final TextEditingController _originController = TextEditingController(); // Moved inside class
   double _days = 3;
   String _selectedBudget = 'Mid';
   bool _isLoading = false;
 
-  // ⚠️ REPLACE THIS WITH YOUR RENDER URL (Keep /generate-trip at the end)
+  // ⚠️ REPLACE THIS WITH YOUR RENDER URL
   final String _apiUrl = "https://trip-mitra-api.onrender.com/generate-trip";
-  // If testing locally on Android Emulator use: "http://10.0.2.2:3000/generate-trip"
 
   // --- LOGIC: CALL API ---
   Future<void> _generateTrip() async {
-    if (_destinationController.text.isEmpty) {
+    // 1. Validation: Check both inputs
+    if (_destinationController.text.isEmpty || _originController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter a destination! 🌍")),
+        const SnackBar(content: Text("Please enter both cities! 🌍")),
       );
       return;
     }
 
-    setState(() => _isLoading = true); // Start loading spinner
+    setState(() => _isLoading = true);
 
     try {
       final response = await http.post(
         Uri.parse(_apiUrl),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
+          "origin": _originController.text,        // <--- FIXED: Now sending Origin!
           "destination": _destinationController.text,
           "days": _days.toInt(),
           "budget": _selectedBudget,
@@ -50,10 +49,8 @@ class _TripFormScreenState extends State<TripFormScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        if (!mounted) return;
 
-        if (!mounted) return; // Check if screen is still active
-
-        // Navigate to Result
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -69,7 +66,7 @@ class _TripFormScreenState extends State<TripFormScreen> {
         SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
       );
     } finally {
-      if (mounted) setState(() => _isLoading = false); // Stop loading spinner
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -77,7 +74,6 @@ class _TripFormScreenState extends State<TripFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // We use a Stack to put the image BEHIND the form
       body: Stack(
         children: [
           // 1. BACKGROUND IMAGE
@@ -86,16 +82,13 @@ class _TripFormScreenState extends State<TripFormScreen> {
             width: double.infinity,
             decoration: const BoxDecoration(
               image: DecorationImage(
-                // A nice generic travel background (Mountains/Clouds)
-                image: NetworkImage(
-                  "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop",
-                ),
+                image: NetworkImage("https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop"),
                 fit: BoxFit.cover,
               ),
             ),
           ),
 
-          // 2. BLACK OVERLAY (To make text readable)
+          // 2. BLACK OVERLAY
           Container(color: Colors.black.withOpacity(0.5)),
 
           // 3. THE CONTENT
@@ -106,12 +99,7 @@ class _TripFormScreenState extends State<TripFormScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Header
-                    const Icon(
-                      Icons.travel_explore,
-                      color: Colors.white,
-                      size: 60,
-                    ),
+                    const Icon(Icons.travel_explore, color: Colors.white, size: 60),
                     const SizedBox(height: 10),
                     Text(
                       "Trip Mitra",
@@ -124,100 +112,64 @@ class _TripFormScreenState extends State<TripFormScreen> {
                     ),
                     Text(
                       "Your AI Travel Companion",
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        color: Colors.white70,
-                      ),
+                      style: GoogleFonts.poppins(fontSize: 16, color: Colors.white70),
                     ),
-
                     const SizedBox(height: 40),
-
-                    // 1. ORIGIN INPUT (NEW)
-                    const Text(
-                      "From where?",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _originController,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                      decoration: InputDecoration(
-                        hintText: "e.g. New Delhi, Mumbai, London",
-                        prefixIcon: const Icon(
-                          Icons.flight_takeoff,
-                          color: Color(0xFF00695C),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
 
                     // GLASS CARD FORM
                     Container(
                       padding: const EdgeInsets.all(25),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(
-                          0.95,
-                        ), // Almost opaque white
+                        color: Colors.white.withOpacity(0.95),
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
+                          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10)),
                         ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Destination Input
-                          const Text(
-                            "Where to?",
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                          
+                          // 1. ORIGIN INPUT (Moved Inside Card)
+                          const Text("From where?", style: TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _originController,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            decoration: InputDecoration(
+                              hintText: "e.g. New Delhi",
+                              prefixIcon: const Icon(Icons.flight_takeoff, color: Color(0xFF00695C)),
+                              filled: true,
+                              fillColor: Colors.grey.shade100,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                            ),
                           ),
+                          
+                          const SizedBox(height: 20),
+
+                          // 2. DESTINATION INPUT
+                          const Text("Where to?", style: TextStyle(fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
                           TextField(
                             controller: _destinationController,
                             style: const TextStyle(fontWeight: FontWeight.bold),
                             decoration: InputDecoration(
-                              hintText: "e.g. Paris, Goa, Tokyo",
-                              prefixIcon: const Icon(
-                                Icons.location_pin,
-                                color: Color(0xFF00695C),
-                              ),
+                              hintText: "e.g. Goa, Paris",
+                              prefixIcon: const Icon(Icons.location_pin, color: Color(0xFF00695C)),
                               filled: true,
                               fillColor: Colors.grey.shade100,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                             ),
                           ),
 
                           const SizedBox(height: 20),
 
-                          // Duration Slider
+                          // 3. DURATION SLIDER
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                "Duration",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                "${_days.toInt()} Days",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF00695C),
-                                ),
-                              ),
+                              const Text("Duration", style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text("${_days.toInt()} Days", style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF00695C))),
                             ],
                           ),
                           Slider(
@@ -231,36 +183,21 @@ class _TripFormScreenState extends State<TripFormScreen> {
 
                           const SizedBox(height: 15),
 
-                          // Budget Dropdown
-                          const Text(
-                            "Budget",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          // 4. BUDGET DROPDOWN
+                          const Text("Budget", style: TextStyle(fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
                             value: _selectedBudget,
                             decoration: InputDecoration(
                               filled: true,
                               fillColor: Colors.grey.shade100,
-                              prefixIcon: const Icon(
-                                Icons.wallet,
-                                color: Color(0xFF00695C),
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
+                              prefixIcon: const Icon(Icons.wallet, color: Color(0xFF00695C)),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                             ),
                             items: ["Low", "Mid", "High"]
-                                .map(
-                                  (b) => DropdownMenuItem(
-                                    value: b,
-                                    child: Text("$b Budget"),
-                                  ),
-                                )
+                                .map((b) => DropdownMenuItem(value: b, child: Text("$b Budget")))
                                 .toList(),
-                            onChanged: (val) =>
-                                setState(() => _selectedBudget = val!),
+                            onChanged: (val) => setState(() => _selectedBudget = val!),
                           ),
 
                           const SizedBox(height: 30),
@@ -270,27 +207,17 @@ class _TripFormScreenState extends State<TripFormScreen> {
                             width: double.infinity,
                             height: 55,
                             child: ElevatedButton(
-                              onPressed: _isLoading
-                                  ? null
-                                  : _generateTrip, // Disable if loading
+                              onPressed: _isLoading ? null : _generateTrip,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF00695C),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 elevation: 5,
                               ),
                               child: _isLoading
-                                  ? const CircularProgressIndicator(
-                                      color: Colors.white,
-                                    )
+                                  ? const CircularProgressIndicator(color: Colors.white)
                                   : const Text(
                                       "Plan My Trip ✈️",
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
+                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                                     ),
                             ),
                           ),
@@ -303,21 +230,10 @@ class _TripFormScreenState extends State<TripFormScreen> {
                     // Saved Trips Link
                     TextButton.icon(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SavedTripsScreen(),
-                          ),
-                        );
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => const SavedTripsScreen()));
                       },
                       icon: const Icon(Icons.history, color: Colors.white),
-                      label: const Text(
-                        "View Saved Trips",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      label: const Text("View Saved Trips", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
