@@ -22,9 +22,9 @@ class _TripResultScreenState extends State<TripResultScreen> {
 
   Future<void> _saveTrip() async {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Saving your trip... 💾")),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Saving your trip... 💾")));
 
     try {
       final response = await http.post(
@@ -67,6 +67,8 @@ class _TripResultScreenState extends State<TripResultScreen> {
     final List gems = widget.tripData['gems'] ?? [];
     final List itinerary = widget.tripData['itinerary'] ?? [];
     final transportTip = widget.tripData['local_transport'] ?? "No transport info available.";
+    final origin = widget.tripData['origin'] ?? "Your Location";
+    final travelTip =widget.tripData['travel_to_destination'] ?? "Check flights or trains.";
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _saveTrip,
@@ -96,7 +98,8 @@ class _TripResultScreenState extends State<TripResultScreen> {
                 children: [
                   // 1. The Real Image
                   Image.network(
-                    widget.tripData['imageUrl'] ?? "https://via.placeholder.com/400",
+                    widget.tripData['imageUrl'] ??
+                        "https://via.placeholder.com/400",
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
@@ -153,14 +156,12 @@ class _TripResultScreenState extends State<TripResultScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       ElevatedButton.icon(
-                        onPressed: () {
-                          // Opens Google Flights searching for the destination
-                          _launchURL(
-                            "https://www.google.com/search?q=flights+to+$destination",
-                          );
-                        },
-                        icon: const Icon(Icons.flight, size: 18),
-                        label: const Text("Flights"),
+      onPressed: () {
+        // Smart Search: Flights from Origin -> Destination
+        _launchURL("https://www.google.com/search?q=flights+from+$origin+to+$destination");
+      },
+      icon: const Icon(Icons.flight, size: 18),
+      label: const Text("Flights"),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue.shade50,
                           foregroundColor: Colors.blue,
@@ -185,9 +186,50 @@ class _TripResultScreenState extends State<TripResultScreen> {
 
                   // -----------------------------
                   const SizedBox(height: 25),
+                  // --- NEW: "HOW TO REACH" CARD ---
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.indigo.shade50, // Different color (Indigo)
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.indigo.shade100),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start, // Align top
+                      children: [
+                        const Icon(Icons.flight_takeoff, color: Colors.indigo),
+                        const SizedBox(width: 15),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Best Way to Reach: ✈️",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: Colors.indigo,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                travelTip, // <--- Displays the AI advice
+                                style: TextStyle(
+                                  color: Colors.indigo.shade900,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
                   // ... after the Booking Buttons Row ...
-                  const SizedBox(height: 20),
+                  //const SizedBox(height: 20),
 
                   // NEW: Local Transport Tip Card
                   Container(

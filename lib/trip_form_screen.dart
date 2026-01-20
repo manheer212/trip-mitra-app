@@ -12,6 +12,9 @@ class TripFormScreen extends StatefulWidget {
   State<TripFormScreen> createState() => _TripFormScreenState();
 }
 
+final TextEditingController _originController =
+    TextEditingController(); // <--- NEW
+
 class _TripFormScreenState extends State<TripFormScreen> {
   // --- STATE VARIABLES ---
   final TextEditingController _destinationController = TextEditingController();
@@ -47,9 +50,9 @@ class _TripFormScreenState extends State<TripFormScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        
+
         if (!mounted) return; // Check if screen is still active
-        
+
         // Navigate to Result
         Navigator.push(
           context,
@@ -84,16 +87,16 @@ class _TripFormScreenState extends State<TripFormScreen> {
             decoration: const BoxDecoration(
               image: DecorationImage(
                 // A nice generic travel background (Mountains/Clouds)
-                image: NetworkImage("https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop"),
+                image: NetworkImage(
+                  "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop",
+                ),
                 fit: BoxFit.cover,
               ),
             ),
           ),
 
           // 2. BLACK OVERLAY (To make text readable)
-          Container(
-            color: Colors.black.withOpacity(0.5),
-          ),
+          Container(color: Colors.black.withOpacity(0.5)),
 
           // 3. THE CONTENT
           SafeArea(
@@ -104,7 +107,11 @@ class _TripFormScreenState extends State<TripFormScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Header
-                    const Icon(Icons.travel_explore, color: Colors.white, size: 60),
+                    const Icon(
+                      Icons.travel_explore,
+                      color: Colors.white,
+                      size: 60,
+                    ),
                     const SizedBox(height: 10),
                     Text(
                       "Trip Mitra",
@@ -122,35 +129,69 @@ class _TripFormScreenState extends State<TripFormScreen> {
                         color: Colors.white70,
                       ),
                     ),
-                    
+
                     const SizedBox(height: 40),
+
+                    // 1. ORIGIN INPUT (NEW)
+                    const Text(
+                      "From where?",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _originController,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      decoration: InputDecoration(
+                        hintText: "e.g. New Delhi, Mumbai, London",
+                        prefixIcon: const Icon(
+                          Icons.flight_takeoff,
+                          color: Color(0xFF00695C),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
 
                     // GLASS CARD FORM
                     Container(
                       padding: const EdgeInsets.all(25),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.95), // Almost opaque white
+                        color: Colors.white.withOpacity(
+                          0.95,
+                        ), // Almost opaque white
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.2),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
-                          )
+                          ),
                         ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Destination Input
-                          const Text("Where to?", style: TextStyle(fontWeight: FontWeight.bold)),
+                          const Text(
+                            "Where to?",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           const SizedBox(height: 8),
                           TextField(
                             controller: _destinationController,
                             style: const TextStyle(fontWeight: FontWeight.bold),
                             decoration: InputDecoration(
                               hintText: "e.g. Paris, Goa, Tokyo",
-                              prefixIcon: const Icon(Icons.location_pin, color: Color(0xFF00695C)),
+                              prefixIcon: const Icon(
+                                Icons.location_pin,
+                                color: Color(0xFF00695C),
+                              ),
                               filled: true,
                               fillColor: Colors.grey.shade100,
                               border: OutlineInputBorder(
@@ -159,15 +200,24 @@ class _TripFormScreenState extends State<TripFormScreen> {
                               ),
                             ),
                           ),
-                          
+
                           const SizedBox(height: 20),
 
                           // Duration Slider
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text("Duration", style: TextStyle(fontWeight: FontWeight.bold)),
-                              Text("${_days.toInt()} Days", style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF00695C))),
+                              const Text(
+                                "Duration",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "${_days.toInt()} Days",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF00695C),
+                                ),
+                              ),
                             ],
                           ),
                           Slider(
@@ -182,23 +232,35 @@ class _TripFormScreenState extends State<TripFormScreen> {
                           const SizedBox(height: 15),
 
                           // Budget Dropdown
-                          const Text("Budget", style: TextStyle(fontWeight: FontWeight.bold)),
+                          const Text(
+                            "Budget",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
                             value: _selectedBudget,
                             decoration: InputDecoration(
                               filled: true,
                               fillColor: Colors.grey.shade100,
-                              prefixIcon: const Icon(Icons.wallet, color: Color(0xFF00695C)),
+                              prefixIcon: const Icon(
+                                Icons.wallet,
+                                color: Color(0xFF00695C),
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide.none,
                               ),
                             ),
                             items: ["Low", "Mid", "High"]
-                                .map((b) => DropdownMenuItem(value: b, child: Text("$b Budget")))
+                                .map(
+                                  (b) => DropdownMenuItem(
+                                    value: b,
+                                    child: Text("$b Budget"),
+                                  ),
+                                )
                                 .toList(),
-                            onChanged: (val) => setState(() => _selectedBudget = val!),
+                            onChanged: (val) =>
+                                setState(() => _selectedBudget = val!),
                           ),
 
                           const SizedBox(height: 30),
@@ -208,17 +270,27 @@ class _TripFormScreenState extends State<TripFormScreen> {
                             width: double.infinity,
                             height: 55,
                             child: ElevatedButton(
-                              onPressed: _isLoading ? null : _generateTrip, // Disable if loading
+                              onPressed: _isLoading
+                                  ? null
+                                  : _generateTrip, // Disable if loading
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF00695C),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                                 elevation: 5,
                               ),
-                              child: _isLoading 
-                                  ? const CircularProgressIndicator(color: Colors.white)
+                              child: _isLoading
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
                                   : const Text(
                                       "Plan My Trip ✈️",
-                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
                             ),
                           ),
@@ -231,12 +303,20 @@ class _TripFormScreenState extends State<TripFormScreen> {
                     // Saved Trips Link
                     TextButton.icon(
                       onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const SavedTripsScreen()));
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SavedTripsScreen(),
+                          ),
+                        );
                       },
                       icon: const Icon(Icons.history, color: Colors.white),
                       label: const Text(
-                        "View Saved Trips", 
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        "View Saved Trips",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
