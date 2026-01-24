@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class TripResultScreen extends StatelessWidget {
   final Map<String, dynamic> tripData;
@@ -15,12 +16,15 @@ class TripResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Data Parsing (Safety Checks)
+    // 1. Data Parsing (Safely handle missing data)
     final origin = tripData['origin'] ?? "Your City";
     final destination = tripData['destination'] ?? "Unknown";
+    
+    // Default to empty maps/lists if the AI missed them
     final travelOptions = tripData['travel_options'] ?? {};
-    final itinerary = tripData['itinerary'] as List? ?? [];
+    final List itinerary = tripData['itinerary'] ?? [];
     final budgetStats = tripData['budget_breakdown'] ?? {};
+    final imageUrl = tripData['imageUrl'] ?? "https://via.placeholder.com/400";
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
@@ -28,15 +32,34 @@ class TripResultScreen extends StatelessWidget {
         slivers: [
           // --- HEADER IMAGE ---
           SliverAppBar(
-            expandedHeight: 220,
+            expandedHeight: 250,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(destination, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, shadows: [Shadow(blurRadius: 10)])),
+              title: Text(
+                destination,
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  shadows: [const Shadow(color: Colors.black, blurRadius: 10)],
+                ),
+              ),
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(tripData['imageUrl'] ?? "https://via.placeholder.com/400", fit: BoxFit.cover),
-                  Container(color: Colors.black38), // Dark overlay
+                  Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (ctx, err, stack) => Container(color: Colors.teal),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -50,45 +73,56 @@ class TripResultScreen extends StatelessWidget {
                 children: [
                   
                   // --- SECTION 1: HOW TO REACH (Flight / Train / Bus) ---
-                  const Text("🚆 How to Reach", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text("🚆 How to Reach", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildTravelCard(
-                          icon: Icons.flight, 
-                          mode: "Flight", 
-                          data: travelOptions['flight'], 
-                          color: Colors.blue, 
-                          onTap: () => _launchURL("https://www.google.com/search?q=flights+from+$origin+to+$destination"),
-                        ),
-                        _buildTravelCard(
-                          icon: Icons.train, 
-                          mode: "Train", 
-                          data: travelOptions['train'], 
-                          color: Colors.orange, 
-                          onTap: () => _launchURL("https://www.google.com/search?q=trains+from+$origin+to+$destination"), // In India, ideally irctc.co.in
-                        ),
-                        _buildTravelCard(
-                          icon: Icons.directions_bus, 
-                          mode: "Bus", 
-                          data: travelOptions['bus'], 
-                          color: Colors.green, 
-                          onTap: () => _launchURL("https://www.redbus.in/search?fromCityName=$origin&toCityName=$destination"), // Generic search
-                        ),
-                      ],
+                  
+                  if (travelOptions.isEmpty)
+                    const Text("No travel details generated.")
+                  else
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          if (travelOptions['flight'] != null)
+                            _buildTravelCard(
+                              icon: Icons.flight, 
+                              mode: "Flight", 
+                              data: travelOptions['flight'], 
+                              color: Colors.blue, 
+                              onTap: () => _launchURL("https://www.google.com/search?q=flights+from+$origin+to+$destination"),
+                            ),
+                          if (travelOptions['train'] != null)
+                            _buildTravelCard(
+                              icon: Icons.train, 
+                              mode: "Train", 
+                              data: travelOptions['train'], 
+                              color: Colors.orange, 
+                              onTap: () => _launchURL("https://www.google.com/search?q=trains+from+$origin+to+$destination"), 
+                            ),
+                          if (travelOptions['bus'] != null)
+                            _buildTravelCard(
+                              icon: Icons.directions_bus, 
+                              mode: "Bus", 
+                              data: travelOptions['bus'], 
+                              color: Colors.green, 
+                              onTap: () => _launchURL("https://www.redbus.in/search?fromCityName=$origin&toCityName=$destination"), 
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
 
                   const SizedBox(height: 30),
 
                   // --- SECTION 2: BUDGET BREAKDOWN ---
-                  const Text("💰 Estimated Budget", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text("💰 Estimated Budget", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   Container(
                     padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 10)]),
+                    decoration: BoxDecoration(
+                      color: Colors.white, 
+                      borderRadius: BorderRadius.circular(16), 
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]
+                    ),
                     child: Column(
                       children: [
                         _buildBudgetRow("Transport", budgetStats['transport']),
@@ -99,8 +133,8 @@ class TripResultScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text("TOTAL EST.", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.teal)),
-                            Text(budgetStats['total_estimated'] ?? "N/A", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.teal)),
+                            Text("TOTAL EST.", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18, color: const Color(0xFF00695C))),
+                            Text(budgetStats['total_estimated'] ?? "N/A", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18, color: const Color(0xFF00695C))),
                           ],
                         )
                       ],
@@ -110,9 +144,16 @@ class TripResultScreen extends StatelessWidget {
                   const SizedBox(height: 30),
 
                   // --- SECTION 3: DETAILED ITINERARY ---
-                  const Text("📅 Day-by-Day Plan", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text("📅 Day-by-Day Plan", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 15),
-                  ...itinerary.map((day) => _buildDayCard(day)),
+                  
+                  if (itinerary.isEmpty)
+                     const Padding(
+                       padding: EdgeInsets.all(20.0),
+                       child: Text("⚠️ No itinerary details found. Try generating again."),
+                     )
+                  else
+                    ...itinerary.map((day) => _buildDayCard(day)),
 
                   const SizedBox(height: 50),
                 ],
@@ -127,15 +168,14 @@ class TripResultScreen extends StatelessWidget {
   // --- HELPER WIDGETS ---
 
   Widget _buildTravelCard({required IconData icon, required String mode, required dynamic data, required Color color, required VoidCallback onTap}) {
-    if (data == null) return const SizedBox.shrink();
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 140,
+        width: 150,
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withOpacity(0.05),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: color.withOpacity(0.3)),
         ),
@@ -150,11 +190,17 @@ class TripResultScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            Text(mode, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            Text(data['price'] ?? "", style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+            Text(mode, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: color)),
             const SizedBox(height: 4),
+            Text(data['price'] ?? "Check Price", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             Text(data['duration'] ?? "", style: const TextStyle(fontSize: 12, color: Colors.grey)),
-            Text(data['details'] ?? "", maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+            const SizedBox(height: 4),
+            Text(
+              data['details'] ?? "Direct Route", 
+              maxLines: 2, 
+              overflow: TextOverflow.ellipsis, 
+              style: const TextStyle(fontSize: 11, color: Colors.grey)
+            ),
           ],
         ),
       ),
@@ -176,24 +222,50 @@ class TripResultScreen extends StatelessWidget {
 
   Widget _buildDayCard(Map day) {
     List activities = day['activities'] ?? [];
+    
+    // Check if activities is just a List of Strings (Old format fallback)
+    // or a List of Maps (New format)
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)),
+      decoration: BoxDecoration(
+        color: Colors.white, 
+        borderRadius: BorderRadius.circular(16), 
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5)]
+      ),
       child: Theme(
         data: ThemeData().copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           initiallyExpanded: true,
-          title: Text("Day ${day['day']}: ${day['title']}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          shape: const Border(), // Removes border when expanded
+          title: Text(
+            "Day ${day['day']}: ${day['title'] ?? 'Explore'}", 
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 15)
+          ),
           children: activities.map<Widget>((act) {
-            return ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.teal.shade50, borderRadius: BorderRadius.circular(8)),
-                child: Text(act['time'][0], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.teal)), // M, A, E
-              ),
-              title: Text(act['desc'], style: const TextStyle(fontSize: 14)),
-              trailing: Text(act['cost'], style: const TextStyle(fontSize: 12, color: Colors.orange, fontWeight: FontWeight.bold)),
-            );
+            
+            // Handle new format {time, desc, cost}
+            if (act is Map) {
+              return ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: Colors.teal.shade50, borderRadius: BorderRadius.circular(6)),
+                  child: Text(
+                    (act['time'] ?? "Day").toString().substring(0, 1), // M/A/E
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal.shade700)
+                  ),
+                ),
+                title: Text(act['desc'] ?? "", style: const TextStyle(fontSize: 13)),
+                trailing: Text(
+                  act['cost'] ?? "", 
+                  style: const TextStyle(fontSize: 12, color: Colors.orange, fontWeight: FontWeight.bold)
+                ),
+              );
+            } 
+            // Handle fallback (if old format somehow comes through)
+            else {
+               return ListTile(title: Text(act.toString()));
+            }
           }).toList(),
         ),
       ),

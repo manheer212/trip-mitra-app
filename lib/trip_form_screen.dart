@@ -88,7 +88,7 @@ class _TripFormScreenState extends State<TripFormScreen> {
               ),
             ),
           ),
-          Container(color: Colors.black.withOpacity(0.5)), // Dark Overlay
+          Container(color: Colors.black.withValues(alpha: 0.5)), // Dark Overlay
 
           SafeArea(
             child: Center(
@@ -107,9 +107,9 @@ class _TripFormScreenState extends State<TripFormScreen> {
                     Container(
                       padding: const EdgeInsets.all(25),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.95),
+                        color: Colors.white.withValues(alpha: 0.95),
                         borderRadius: BorderRadius.circular(24),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10))],
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10))],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,7 +168,7 @@ class _TripFormScreenState extends State<TripFormScreen> {
                           const Text("Budget", style: TextStyle(fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
-                            value: _selectedBudget,
+                            initialValue: _selectedBudget,
                             decoration: InputDecoration(
                               filled: true,
                               fillColor: Colors.grey.shade100,

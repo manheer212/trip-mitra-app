@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; // <--- Import this
+import 'package:google_fonts/google_fonts.dart';
 import 'trip_form_screen.dart';
 
 void main() {
@@ -20,7 +20,16 @@ class TripMitraApp extends StatelessWidget {
           seedColor: const Color(0xFF00695C), // Professional Teal
           brightness: Brightness.light,
         ),
-        textTheme: GoogleFonts.poppinsTextTheme(), // Modern Font
+        
+        // --- FIX: Add Fallback for Emojis ---
+        fontFamilyFallback: const ["Noto Color Emoji"], 
+        
+        // --- FIX: Ensure Poppins applies to all text ---
+        textTheme: GoogleFonts.poppinsTextTheme().copyWith(
+          bodyMedium: GoogleFonts.poppins(fontSize: 14),
+          bodyLarge: GoogleFonts.poppins(fontSize: 16),
+        ),
+
         scaffoldBackgroundColor: const Color(0xFFF5F7FA), // Light Grey Background
         
         // Pretty Input Fields globally
