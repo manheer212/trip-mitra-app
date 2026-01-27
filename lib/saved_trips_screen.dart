@@ -60,7 +60,7 @@ class _SavedTripsScreenState extends State<SavedTripsScreen> {
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(15),
                         leading: CircleAvatar(
-                          backgroundColor: Colors.teal.shade100,
+                          backgroundColor: const Color.fromARGB(255, 43, 216, 202),
                           child: const Icon(Icons.flight_takeoff, color: Colors.teal),
                         ),
                         title: Text(trip['destination'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
