@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'trip_form_screen.dart';
+import 'screens/trip_form_screen.dart';
 
 void main() {
   runApp(const TripMitraApp());
